@@ -1,0 +1,101 @@
+////////////////////////////////
+// NXT Does something and send data to the PC
+// which is already connected as Master on 
+// Chann 0
+// Copyright 2007 GiP
+// This program is distributed under the terms of the
+// GNU General Public License (GPL)
+// See file COPYING
+
+#include "NXCDefs.h"
+#define BT_CONN 0
+#define INBOX 1
+#define OUTBOX 5
+#define THRESHOLD 50
+
+int s,fin;
+
+// Check if there is a Master connected to chan 0
+sub BTCheck(int conn)  
+{
+if (!BluetoothStatus(conn)==NO_ERR)
+{ TextOut(5,LCD_LINE2, "Error");
+  Wait(1000);
+  Stop(true);
+}
+}
+
+// wait until BT connection is clear
+sub BTWait (int conn) 
+{  //wait until BT is idle
+   until(BluetoothStatus(conn)==NO_ERR);
+}
+
+
+// read the sensors and output the values on chan 0
+// when output data limit is reached send an "E" to signal master 
+// the end of data stream and set fin=1
+task OutVal()
+{
+int t0,t,tn,tp=-1,A,C;
+string out, Str_s,Str_t,Str_A,Str_C;
+t0=CurrentTick();
+int i = 1;
+
+while(i<=200)
+{ s=Sensor(IN_1);
+  t=CurrentTick()-t0;
+  tn=t/10;
+  if(tn>tp)
+  { tp=tn;
+    A=MotorTachoCount(OUT_A);
+    C=MotorTachoCount(OUT_C);
+    Str_s = NumToStr(s);
+    Str_t = NumToStr(t);
+    Str_A = NumToStr(A);
+    Str_C = NumToStr(C);
+    out = StrCat(Str_t," ",Str_s," ",Str_A," ",Str_C);
+    SendRemoteString(BT_CONN,OUTBOX,out);
+    BTWait(BT_CONN);
+    //Wait(5);
+    i++;
+  }
+}
+out = "E";
+SendRemoteString(BT_CONN,OUTBOX,out);
+fin=1;
+}
+
+// Run the motors until the sensor say it's the edge 
+// then back, rotate, forward again
+// when fin=1 stop everything
+task Move()
+{
+OnFwd(OUT_AC, 40);
+while(fin==0)
+{ if (s < THRESHOLD)
+  { OnRevEx(OUT_AC,40,RESET_NONE);
+    Wait(300);
+    if (Random() >=0)
+      OnRevSyncEx(OUT_AC,40,70,RESET_NONE);
+    else
+      OnRevSyncEx(OUT_AC,40,-70,RESET_NONE);
+    Wait(600);
+    OnFwdEx(OUT_AC, 40,RESET_NONE);
+  }
+  else
+    Wait(50);
+}
+}
+
+// MAIN: check if connection is there
+// set some parameters and
+// starts the subs for sensor and motors as
+// Multitasking threads (or whatever you call this)
+task main()
+{
+fin=0;
+SetSensorLight(IN_1);
+BTCheck(BT_CONN); 
+Precedes(OutVal,Move);
+}

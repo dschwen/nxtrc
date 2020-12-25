@@ -1,0 +1,118 @@
+." written by GiP Copyright 2010 available under GPL v.2
+.TH nxtrc 1  "July 27 2010" "version 2.3" "USER COMMANDS"
+.SH NAME
+nxtrc \- a program to interact with LEGO NXT via BlueTooth
+.SH SYNOPSIS
+.B nxtrc
+[\-s] 
+.PP
+.B nxtrc
+[\-a ADDR] [\-v] command 
+.SH DESCRIPTION
+NXTRC (NXT Remote Command) is a small program that allows to send various
+commands to a LEGO Mindstorm NXT Brick. It uses the Bluetooth protocol through
+the Bluez libraries. 
+.PP
+The option 
+.B \-s
+starts a scan to find BlueTooth devices. If a BT address is given in the
+command line or is in the Environment Variable BTADDR it connects to the NXT
+and performs the task specified in <command>. The first time you connect with
+a device you need to exchange a password, this task is usually done by the
+Operative System BlueTooth Management (as Kbluetooth under KDE). 
+.PP
+.SH COMMANDS and OPTIONS
+.TP
+\-a
+BlueTooth Address of the NXT, 
+.B required
+if BTADDR Environment Variable is not set to the address 
+.TP
+\-b
+Get Battery Level
+.TP
+\-d  FILE     
+Delete FILE frome NXT
+.TP
+\-h
+display a short help text
+.TP
+\-i
+Get info on NXT brick
+.TP
+\-k           
+Stop a program running on NXT
+.TP
+\-l[PATT]
+List files on NXT brick matching PATTern if present (e.g. -l*.rxe) N.B. No
+spaces between -l and PATT! see at the end the patterns allowed
+.TP
+\-m  FILE     
+Play sound file FILE once
+.TP
+\-M  FILE     
+Play sound file FILE indefinitely
+.TP
+\-n  NAME     
+Set NXT name to NAME
+.TP
+\-p  FILE     
+Run Program FILE on NXT
+.TP
+\-r  FILE     
+Read FILE frome NXT and save it in the working directory if FILE is already
+present ask for permission to overwrite
+.TP
+\-v
+Be verbose. This is the only option that can be given with another command.
+It's not always very useful....
+.TP
+\-w  FILE     
+Write FILE on NXT, If FILE is already present ask for permission to overwrite
+.TP
+\-W  FILE     
+Same as -w forcing overwrite if FILE exists
+.TP
+\-z           
+Stop Sound Playback
+
+
+.SH File Names and Patterns
+.PP
+On the NXT File names are of the form "Name.Ext" with max 15 characters for
+the Name and 3 for the Extension. When asking a listing with the 
+.B
+\-l
+command you can give a specific file name to see if it's on the NXT and list
+its size, or a Pattern using widlcards. Due to the limitation of the NXT API
+patterns are limited to the form "*.ext", "Name.*" or "*.*" this last one is
+the default and can be omitted.   
+
+.SH EXAMPLES
+scan for devices
+.br
+    $ nxtrc \-s 
+.br
+     00:10:20:30:40:50  NXT1 
+.br
+     00:01:01:02:03:04  NXT2 
+.PP
+set up Environment Variable for connection with NXT1 and ask for info 
+.br
+    $ export BTADDR=00:10:20:30:40:50
+.br 
+    $ nxtrc -i
+.PP
+load program Prog.rxe on  NXT1 and run it
+.br
+    $ nxtrc -W Prog.rxe
+.br
+    $ nxtrc -p Prog.rxe
+
+.SH EXIT STATUS
+.B
+nxtrc
+returns a zero exit status if it succeeds. Non zero is returned in case of failure.
+.SH AUTHOR
+Gian Piero Puccioni (gianpiero.puccioni (at) isc.cnr.it)
+
